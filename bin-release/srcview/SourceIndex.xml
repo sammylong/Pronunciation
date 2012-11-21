@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<index>
+	<title>Source of Pronunciation</title>
+	<nodes>
+		<node label="html-template">
+			<node label="history">
+				<node icon="cssIcon" label="history.css" url="source/html-template/history/history.css.html"/>
+				<node label="history.js" url="source/html-template/history/history.js.txt"/>
+				<node icon="htmlIcon" label="historyFrame.html" url="source/html-template/history/historyFrame.html"/>
+			</node>
+			<node icon="htmlIcon" label="index.template.html" url="source/html-template/index.template.html"/>
+			<node icon="swfIcon" label="playerProductInstall.swf" url="source/html-template/playerProductInstall.swf"/>
+			<node label="swfobject.js" url="source/html-template/swfobject.js.txt"/>
+		</node>
+		<node label="libs">
+		</node>
+		<node label="src">
+			<node icon="packageIcon" label="org.as3fft" expanded="true">
+				<node icon="actionScriptIcon" label="ComplexNumber.as" url="source/org/as3fft/ComplexNumber.as.html"/>
+				<node icon="actionScriptIcon" label="FFT2.as" url="source/org/as3fft/FFT2.as.html"/>
+				<node icon="actionScriptIcon" label="FFTElement.as" url="source/org/as3fft/FFTElement.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.as3wavsound" expanded="true">
+				<node icon="actionScriptIcon" label="WavSound.as" url="source/org/as3wavsound/WavSound.as.html"/>
+				<node icon="actionScriptIcon" label="WavSoundChannel.as" url="source/org/as3wavsound/WavSoundChannel.as.html"/>
+				<node icon="actionScriptIcon" label="WavSoundPlayer.as" url="source/org/as3wavsound/WavSoundPlayer.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.as3wavsound.sazameki.core" expanded="true">
+				<node icon="actionScriptIcon" label="AudioSamples.as" url="source/org/as3wavsound/sazameki/core/AudioSamples.as.html"/>
+				<node icon="actionScriptIcon" label="AudioSetting.as" url="source/org/as3wavsound/sazameki/core/AudioSetting.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.as3wavsound.sazameki.format.riff" expanded="true">
+				<node icon="actionScriptIcon" label="Chunk.as" url="source/org/as3wavsound/sazameki/format/riff/Chunk.as.html"/>
+				<node icon="actionScriptIcon" label="LIST.as" url="source/org/as3wavsound/sazameki/format/riff/LIST.as.html"/>
+				<node icon="actionScriptIcon" label="RIFF.as" url="source/org/as3wavsound/sazameki/format/riff/RIFF.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.as3wavsound.sazameki.format.wav" expanded="true">
+				<node icon="actionScriptIcon" label="Wav.as" url="source/org/as3wavsound/sazameki/format/wav/Wav.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.as3wavsound.sazameki.format.wav.chunk" expanded="true">
+				<node icon="actionScriptIcon" label="WavdataChunk.as" url="source/org/as3wavsound/sazameki/format/wav/chunk/WavdataChunk.as.html"/>
+				<node icon="actionScriptIcon" label="WavfmtChunk.as" url="source/org/as3wavsound/sazameki/format/wav/chunk/WavfmtChunk.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.bytearray.micrecorder" expanded="true">
+				<node icon="actionScriptIcon" label="IEncoder.as" url="source/org/bytearray/micrecorder/IEncoder.as.html"/>
+				<node icon="actionScriptIcon" label="MicRecorder.as" url="source/org/bytearray/micrecorder/MicRecorder.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.bytearray.micrecorder.encoder" expanded="true">
+				<node icon="actionScriptIcon" label="WaveEncoder.as" url="source/org/bytearray/micrecorder/encoder/WaveEncoder.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.bytearray.micrecorder.events" expanded="true">
+				<node icon="actionScriptIcon" label="RecordingEvent.as" url="source/org/bytearray/micrecorder/events/RecordingEvent.as.html"/>
+			</node>
+			<node icon="packageIcon" label="org.filterbank" expanded="true">
+				<node icon="actionScriptIcon" label="Filter.as" url="source/org/filterbank/Filter.as.html"/>
+				<node icon="actionScriptIcon" label="Filterbank.as" url="source/org/filterbank/Filterbank.as.html"/>
+			</node>
+			<node icon="mxmlAppIcon" selected="true" label="Pronunciation.mxml" url="source/Pronunciation.mxml.html"/>
+		</node>
+	</nodes>
+	<zipfile label="Download source (ZIP, 44K)" url="Pronunciation.zip">
+	</zipfile>
+	<sdklink label="Download Flex SDK" url="http://www.adobe.com/go/flex451_sdk_download">
+	</sdklink>
+</index>

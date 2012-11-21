@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="100%" height="100%" minWidth="955" minHeight="600"
+			   viewSourceURL="srcview/index.html"
+			   applicationComplete="init()">
+	<fx:Script>
+		<![CDATA[
+			import flash.events.ActivityEvent;
+			import flash.media.Microphone;
+			import flash.media.Sound;
+			
+			import org.as3wavsound.WavSound;
+			import org.as3wavsound.WavSoundChannel;
+			import org.bytearray.micrecorder.*;
+			import org.bytearray.micrecorder.encoder.WaveEncoder;
+			import org.bytearray.micrecorder.events.RecordingEvent;
+			
+			// variables
+			private var _mic:Microphone = Microphone.getMicrophone();
+			private var _waveEncoder:WaveEncoder = new WaveEncoder();
+			private var _recorder:MicRecorder = new MicRecorder(_waveEncoder);
+			private var _maxTime:Number = 10.0;
+			
+			protected function init():void {	
+				_recorder.addEventListener(RecordingEvent.RECORDING, recording);
+				_recorder.addEventListener(Event.COMPLETE, recordComplete);
+				stopBtn.enabled = false;
+			}
+			private function recording(e:RecordingEvent):void {
+				// stop recording after maxtime
+				var currentTime:int = Math.floor(e.time / 1000);			
+				if(currentTime == _maxTime) {
+					if(_recorder != null) {
+						trace("maxtime is reached");
+						_recorder.stop();
+						stopBtn.enabled = false;
+					}
+				}
+			}
+			private function recordComplete(e:Event):void {
+				this.removeEventListener(Event.ENTER_FRAME, updateMeter);
+				var wavSound:WavSound =  new WavSound(_recorder.output);
+				wavSound.play();
+			}
+			private function updateMeter(e:Event):void {
+				// mic activity level is 0 - 100		
+				var interval:Number = 25;
+				var level:int = Math.floor(_mic.activityLevel/interval) as int;
+				switch(level) {
+					case 0:
+						var alpha:Number = _mic.activityLevel/interval;
+						//fillColor0.alpha = alpha;
+						bar0.fill = new SolidColor(0x0000FF, alpha);
+						fillColor1.alpha = 0.0;
+						fillColor2.alpha = 0.0;
+						fillColor3.alpha = 0.0;
+						break;
+					case 1:
+						fillColor0.alpha = 1.0;
+						fillColor1.alpha = (_mic.activityLevel - interval *1)/interval;
+						fillColor2.alpha = 0.0;
+						fillColor3.alpha = 0.0;
+						break;
+					case 2:
+						fillColor0.alpha = 1.0;
+						fillColor1.alpha = 1.0;
+						fillColor2.alpha = (_mic.activityLevel - interval *2)/interval;
+						fillColor3.alpha = 0.0;
+						break;
+					case 3:
+						fillColor0.alpha = 1.0;
+						fillColor1.alpha = 1.0;
+						fillColor2.alpha = 1.0;
+						fillColor3.alpha = (_mic.activityLevel - interval *3)/interval;
+						break;
+					default:
+						break;
+				}
+			}
+			public function recordButtonClicked(clickEvent:Event):void {
+				trace("record button clicked");
+				if(_mic != null) {
+					this.addEventListener(Event.ENTER_FRAME, updateMeter);
+					_recorder.record();
+					stopBtn.enabled = true;
+				}
+			}
+			public function stopButtonClicked(clickEvent:Event):void {
+				trace("stop button clicked");
+				if(_recorder != null) {
+					_recorder.stop();
+					stopBtn.enabled = false;
+				}
+			}
+		]]>
+	</fx:Script>
+	<s:Label id="titleLabel"
+			 horizontalCenter="0" y="{rectHgroup.y - 45}"
+			 fontFamily="Verdana" fontWeight="bold"
+			 fontSize="28"
+			 text="Amphitheater"/>
+	<s:HGroup id="rectHgroup" x = "{hgroup.x}" y="{hgroup.y - 35}">
+		<s:Rect id="bar0"
+				bottomRightRadiusX="3" bottomRightRadiusY="3"
+				topRightRadiusX="3" topRightRadiusY="3"
+				bottomLeftRadiusX="3" bottomLeftRadiusY="3"
+				topLeftRadiusX="3" topLeftRadiusY="3"
+				height = "10" width = "50">
+			<s:fill>
+				<s:SolidColor id="fillColor0" color="#0000FF" alpha="0.0"/>
+			</s:fill>
+			<s:stroke>
+				<s:SolidColorStroke color="#000000" weight="1"/>
+			</s:stroke>
+		</s:Rect>
+		<s:Rect id="bar1"  x = "{bar0.x + 60}"
+				bottomRightRadiusX="3" bottomRightRadiusY="3"
+				topRightRadiusX="3" topRightRadiusY="3"
+				bottomLeftRadiusX="3" bottomLeftRadiusY="3"
+				topLeftRadiusX="3" topLeftRadiusY="3"
+				height = "10" width = "50">
+			<s:fill>
+				<s:SolidColor id="fillColor1" color="#0000FF" alpha="0.0"/>
+			</s:fill>
+			<s:stroke>
+				<s:SolidColorStroke color="#000000" weight="1"/>
+			</s:stroke>
+		</s:Rect>
+		<s:Rect id="bar2"  x = "{bar0.x + 120}"
+				bottomRightRadiusX="3" bottomRightRadiusY="3"
+				topRightRadiusX="3" topRightRadiusY="3"
+				bottomLeftRadiusX="3" bottomLeftRadiusY="3"
+				topLeftRadiusX="3" topLeftRadiusY="3"
+				height = "10" width = "50">
+			<s:fill>
+				<s:SolidColor id="fillColor2" color="#0000FF" alpha="0.0"/>
+			</s:fill>
+			<s:stroke>
+				<s:SolidColorStroke color="#000000" weight="1"/>
+			</s:stroke>
+		</s:Rect>
+		<s:Rect id="bar3"  x = "{bar0.x + 180}"
+				bottomRightRadiusX="3" bottomRightRadiusY="3"
+				topRightRadiusX="3" topRightRadiusY="3"
+				bottomLeftRadiusX="3" bottomLeftRadiusY="3"
+				topLeftRadiusX="3" topLeftRadiusY="3"
+				height = "10" width = "50">
+			<s:fill>
+				<s:SolidColor id="fillColor3" color="#0000FF" alpha="0.0"/>
+			</s:fill>
+			<s:stroke>
+				<s:SolidColorStroke color="#000000" weight="1"/>
+			</s:stroke>
+		</s:Rect>
+	</s:HGroup>
+	<s:HGroup id="hgroup" 
+			  horizontalCenter="0" verticalCenter="0" 
+			  width="200" gap="45">
+		<s:Button id="recordBtn" 
+				  label="Record" 
+				  click="recordButtonClicked(event)"/>
+		<s:Button id="stopBtn" 
+				  label="Stop" 
+				  click="stopButtonClicked(event)"/>
+	</s:HGroup>
+</s:Application>
