@@ -1,4 +1,4 @@
-package org.filterbank {
+package mfcc.filterbank {
 
 	public class Filter {                     // triangular
 		private var _start:Number;		      // starting point (frequency domain)

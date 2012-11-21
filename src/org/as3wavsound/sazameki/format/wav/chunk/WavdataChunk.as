@@ -88,7 +88,7 @@ package org.as3wavsound.sazameki.format.wav.chunk  {
 			var length:int = bytes.length / (setting.bitRate / 8) / setting.channels;
 			var i:int;
 			var left:Vector.<Number>;
-			
+			trace("channels " + setting.channels);
 			if (setting.channels == 2) {
 				left = samples.left;
 				var right:Vector.<Number> = samples.right;

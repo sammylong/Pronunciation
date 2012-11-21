@@ -11,23 +11,29 @@
 			import flash.media.Microphone;
 			import flash.media.Sound;
 			
+			// graphics
+			import spark.primitives.Rect;
 			import mx.graphics.SolidColor;
 			import mx.graphics.SolidColorStroke;
 			
+			// wav sound
 			import org.as3wavsound.WavSound;
 			import org.as3wavsound.WavSoundChannel;
 			import org.bytearray.micrecorder.*;
 			import org.bytearray.micrecorder.encoder.WaveEncoder;
 			import org.bytearray.micrecorder.events.RecordingEvent;
 			
-			import spark.primitives.Rect;
+			// mfcc related classes written by sammy
+			import mfcc.MFCC.MFCC;
+			import mfcc.filterbank.Filterbank;
+			import mfcc.filterbank.Filter;
 			
 			// variables
 			private var _mic:Microphone = Microphone.getMicrophone();
 			private var _waveEncoder:WaveEncoder = new WaveEncoder();
 			private var _recorder:MicRecorder = new MicRecorder(_waveEncoder);
-			private var kMaxTime:Number = 5.0;
-			private var kRectCount:int = 8;
+			private static const kMaxTime:Number = 5.0;
+			private static const kRectCount:int = 8;
 			private var _rects:Array = new Array();
 
 			protected function init():void {	
@@ -64,6 +70,24 @@
 					rect.fill = new SolidColor(0x0000FF, 0.0);
 				}
 			}
+			private function updateMeter(e:Event):void {
+				// mic activity level is 0 - 100		
+				var interval:Number = 100/kRectCount;
+				var level:int = Math.floor(_mic.activityLevel/interval) as int;
+				level = Math.max(level, 0);
+				level = Math.min(level, kRectCount - 1);
+				var rect:Rect = _rects[level];
+				var alpha:Number = (_mic.activityLevel - interval * level)/interval;
+				rect.fill = new SolidColor(0x0000FF, alpha);
+				for (var i:int=0; i<level; i++) {
+					rect = _rects[i];
+					rect.fill = new SolidColor(0x0000FF, 1.0);
+				}
+				for (i=level+1; i<kRectCount; i++) {
+					rect = _rects[i];
+					rect.fill = new SolidColor(0x0000FF, 0.0);
+				}
+			}
 			private function recording(e:RecordingEvent):void {
 				// stop recording after maxtime
 				var currentTime:int = Math.floor(e.time / 1000);			
@@ -78,26 +102,11 @@
 			private function recordComplete(e:Event):void {
 				clearRects();
 				this.removeEventListener(Event.ENTER_FRAME, updateMeter);
+				// mfcc feature
+				extractFeature();
+				// playback
 				var wavSound:WavSound =  new WavSound(_recorder.output);
 				wavSound.play();
-			}
-			private function updateMeter(e:Event):void {
-				// mic activity level is 0 - 100		
-				var interval:Number = 100/kRectCount;
-				var level:int = Math.floor((_mic.activityLevel - 1.0)/interval) as int;
-				trace("level = " + level);
-				var rect:Rect = _rects[level];
-				var alpha:Number = (_mic.activityLevel - interval * level)/interval;
-				rect.fill = new SolidColor(0x0000FF, alpha);
-				for (var i:int=0; i<level; i++) {
-					rect = _rects[i];
-					rect.fill = new SolidColor(0x0000FF, 1.0);
-				}
-				for (i=level+1; i<kRectCount; i++) {
-					rect = _rects[i];
-					rect.fill = new SolidColor(0x0000FF, 0.0);
-				}
-				
 			}
 			public function recordButtonClicked(clickEvent:Event):void {
 				trace("record button clicked");
@@ -114,13 +123,16 @@
 					stopBtn.enabled = false;
 				}
 			}
+			private function extractFeature():void {
+				var mfcc:MFCC = new MFCC(_recorder.output);
+			}
 		]]>
 	</fx:Script>
 	<s:Label id="titleLabel"
 			 horizontalCenter="0" y="{hgroup.y - 90}"
 			 fontFamily="Verdana" fontWeight="bold"
 			 fontSize="28"
-			 text="Achievement"/>
+			 text="Adobe"/>
 	<s:HGroup id="rectGroup" x="{hgroup.x}" y="{hgroup.y - 35}"
 			  initialize="initRects();">
 	</s:HGroup>
