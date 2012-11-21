@@ -11,27 +11,63 @@
 			import flash.media.Microphone;
 			import flash.media.Sound;
 			
+			import mx.graphics.SolidColor;
+			import mx.graphics.SolidColorStroke;
+			
 			import org.as3wavsound.WavSound;
 			import org.as3wavsound.WavSoundChannel;
 			import org.bytearray.micrecorder.*;
 			import org.bytearray.micrecorder.encoder.WaveEncoder;
 			import org.bytearray.micrecorder.events.RecordingEvent;
 			
+			import spark.primitives.Rect;
+			
 			// variables
 			private var _mic:Microphone = Microphone.getMicrophone();
 			private var _waveEncoder:WaveEncoder = new WaveEncoder();
 			private var _recorder:MicRecorder = new MicRecorder(_waveEncoder);
-			private var _maxTime:Number = 10.0;
-			
+			private var kMaxTime:Number = 5.0;
+			private var kRectCount:int = 8;
+			private var _rects:Array = new Array();
+
 			protected function init():void {	
 				_recorder.addEventListener(RecordingEvent.RECORDING, recording);
 				_recorder.addEventListener(Event.COMPLETE, recordComplete);
 				stopBtn.enabled = false;
 			}
+			private function initRects():void {
+				for (var i:int=0; i<kRectCount; i++) {
+					var rect:Rect = new Rect();
+					// position
+					rect.x = hgroup.x + 30*i;
+					// corner radius
+					rect.bottomRightRadiusX = 3;
+					rect.bottomRightRadiusY = 3;
+					rect.bottomLeftRadiusX = 3;
+					rect.bottomLeftRadiusY = 3;
+					rect.topRightRadiusX = 3; 
+					rect.topRightRadiusY = 3;
+					rect.topLeftRadiusX = 3; 
+					rect.topLeftRadiusY= 3;
+					rect.height = 10;
+					rect.width = 20;
+					// color default is black
+					rect.stroke = new SolidColorStroke();
+					// save this rect
+					_rects.push(rect);
+					// add this rec to rectGroup
+					rectGroup.addElement(rect);
+				}
+			}
+			private function clearRects():void {
+				for each (var rect:Rect in _rects) {
+					rect.fill = new SolidColor(0x0000FF, 0.0);
+				}
+			}
 			private function recording(e:RecordingEvent):void {
 				// stop recording after maxtime
 				var currentTime:int = Math.floor(e.time / 1000);			
-				if(currentTime == _maxTime) {
+				if(currentTime == kMaxTime) {
 					if(_recorder != null) {
 						trace("maxtime is reached");
 						_recorder.stop();
@@ -40,44 +76,28 @@
 				}
 			}
 			private function recordComplete(e:Event):void {
+				clearRects();
 				this.removeEventListener(Event.ENTER_FRAME, updateMeter);
 				var wavSound:WavSound =  new WavSound(_recorder.output);
 				wavSound.play();
 			}
 			private function updateMeter(e:Event):void {
 				// mic activity level is 0 - 100		
-				var interval:Number = 25;
-				var level:int = Math.floor(_mic.activityLevel/interval) as int;
-				switch(level) {
-					case 0:
-						var alpha:Number = _mic.activityLevel/interval;
-						//fillColor0.alpha = alpha;
-						bar0.fill = new SolidColor(0x0000FF, alpha);
-						fillColor1.alpha = 0.0;
-						fillColor2.alpha = 0.0;
-						fillColor3.alpha = 0.0;
-						break;
-					case 1:
-						fillColor0.alpha = 1.0;
-						fillColor1.alpha = (_mic.activityLevel - interval *1)/interval;
-						fillColor2.alpha = 0.0;
-						fillColor3.alpha = 0.0;
-						break;
-					case 2:
-						fillColor0.alpha = 1.0;
-						fillColor1.alpha = 1.0;
-						fillColor2.alpha = (_mic.activityLevel - interval *2)/interval;
-						fillColor3.alpha = 0.0;
-						break;
-					case 3:
-						fillColor0.alpha = 1.0;
-						fillColor1.alpha = 1.0;
-						fillColor2.alpha = 1.0;
-						fillColor3.alpha = (_mic.activityLevel - interval *3)/interval;
-						break;
-					default:
-						break;
+				var interval:Number = 100/kRectCount;
+				var level:int = Math.floor((_mic.activityLevel - 1.0)/interval) as int;
+				trace("level = " + level);
+				var rect:Rect = _rects[level];
+				var alpha:Number = (_mic.activityLevel - interval * level)/interval;
+				rect.fill = new SolidColor(0x0000FF, alpha);
+				for (var i:int=0; i<level; i++) {
+					rect = _rects[i];
+					rect.fill = new SolidColor(0x0000FF, 1.0);
 				}
+				for (i=level+1; i<kRectCount; i++) {
+					rect = _rects[i];
+					rect.fill = new SolidColor(0x0000FF, 0.0);
+				}
+				
 			}
 			public function recordButtonClicked(clickEvent:Event):void {
 				trace("record button clicked");
@@ -97,63 +117,12 @@
 		]]>
 	</fx:Script>
 	<s:Label id="titleLabel"
-			 horizontalCenter="0" y="{rectHgroup.y - 45}"
+			 horizontalCenter="0" y="{hgroup.y - 90}"
 			 fontFamily="Verdana" fontWeight="bold"
 			 fontSize="28"
-			 text="Amphitheater"/>
-	<s:HGroup id="rectHgroup" x = "{hgroup.x}" y="{hgroup.y - 35}">
-		<s:Rect id="bar0"
-				bottomRightRadiusX="3" bottomRightRadiusY="3"
-				topRightRadiusX="3" topRightRadiusY="3"
-				bottomLeftRadiusX="3" bottomLeftRadiusY="3"
-				topLeftRadiusX="3" topLeftRadiusY="3"
-				height = "10" width = "50">
-			<s:fill>
-				<s:SolidColor id="fillColor0" color="#0000FF" alpha="0.0"/>
-			</s:fill>
-			<s:stroke>
-				<s:SolidColorStroke color="#000000" weight="1"/>
-			</s:stroke>
-		</s:Rect>
-		<s:Rect id="bar1"  x = "{bar0.x + 60}"
-				bottomRightRadiusX="3" bottomRightRadiusY="3"
-				topRightRadiusX="3" topRightRadiusY="3"
-				bottomLeftRadiusX="3" bottomLeftRadiusY="3"
-				topLeftRadiusX="3" topLeftRadiusY="3"
-				height = "10" width = "50">
-			<s:fill>
-				<s:SolidColor id="fillColor1" color="#0000FF" alpha="0.0"/>
-			</s:fill>
-			<s:stroke>
-				<s:SolidColorStroke color="#000000" weight="1"/>
-			</s:stroke>
-		</s:Rect>
-		<s:Rect id="bar2"  x = "{bar0.x + 120}"
-				bottomRightRadiusX="3" bottomRightRadiusY="3"
-				topRightRadiusX="3" topRightRadiusY="3"
-				bottomLeftRadiusX="3" bottomLeftRadiusY="3"
-				topLeftRadiusX="3" topLeftRadiusY="3"
-				height = "10" width = "50">
-			<s:fill>
-				<s:SolidColor id="fillColor2" color="#0000FF" alpha="0.0"/>
-			</s:fill>
-			<s:stroke>
-				<s:SolidColorStroke color="#000000" weight="1"/>
-			</s:stroke>
-		</s:Rect>
-		<s:Rect id="bar3"  x = "{bar0.x + 180}"
-				bottomRightRadiusX="3" bottomRightRadiusY="3"
-				topRightRadiusX="3" topRightRadiusY="3"
-				bottomLeftRadiusX="3" bottomLeftRadiusY="3"
-				topLeftRadiusX="3" topLeftRadiusY="3"
-				height = "10" width = "50">
-			<s:fill>
-				<s:SolidColor id="fillColor3" color="#0000FF" alpha="0.0"/>
-			</s:fill>
-			<s:stroke>
-				<s:SolidColorStroke color="#000000" weight="1"/>
-			</s:stroke>
-		</s:Rect>
+			 text="Achievement"/>
+	<s:HGroup id="rectGroup" x="{hgroup.x}" y="{hgroup.y - 35}"
+			  initialize="initRects();">
 	</s:HGroup>
 	<s:HGroup id="hgroup" 
 			  horizontalCenter="0" verticalCenter="0" 
