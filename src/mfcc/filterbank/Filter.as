@@ -15,7 +15,8 @@ package mfcc.filterbank {
 			var i:int;
 			var ret:Number = 0.0;
 			var startIndex:int = Math.floor(_start/spacing) as int;
-			var endIndex:int = Math.ceil(_end/spacing) as int;
+			var endIndex:int = Math.ceil(_end/spacing) - 1.0 as int;
+			trace("startIndex: ", startIndex, "endIndex: ", endIndex);
 			for (i=startIndex; i<=endIndex; i++) {
 				ret += samples[i] * this.heightAtFrequency(spacing * i);
 			}

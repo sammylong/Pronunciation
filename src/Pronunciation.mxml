@@ -11,31 +11,32 @@
 			import flash.media.Microphone;
 			import flash.media.Sound;
 			
-			// graphics
-			import spark.primitives.Rect;
+			import mfcc.MFCC.MFCC39;
+			import mfcc.filterbank.Filter;
+			import mfcc.filterbank.Filterbank;
+			
 			import mx.graphics.SolidColor;
 			import mx.graphics.SolidColorStroke;
 			
-			// wav sound
 			import org.as3wavsound.WavSound;
 			import org.as3wavsound.WavSoundChannel;
 			import org.bytearray.micrecorder.*;
 			import org.bytearray.micrecorder.encoder.WaveEncoder;
 			import org.bytearray.micrecorder.events.RecordingEvent;
 			
-			// mfcc related classes written by sammy
-			import mfcc.MFCC.MFCC;
-			import mfcc.filterbank.Filterbank;
-			import mfcc.filterbank.Filter;
+			import spark.primitives.Rect;
 			
 			// variables
+			// record
 			private var _mic:Microphone = Microphone.getMicrophone();
 			private var _waveEncoder:WaveEncoder = new WaveEncoder();
 			private var _recorder:MicRecorder = new MicRecorder(_waveEncoder);
 			private static const kMaxTime:Number = 5.0;
 			private static const kRectCount:int = 8;
 			private var _rects:Array = new Array();
-
+			// mfcc
+			private var _mfcc:MFCC39 = new MFCC39();
+			
 			protected function init():void {	
 				_recorder.addEventListener(RecordingEvent.RECORDING, recording);
 				_recorder.addEventListener(Event.COMPLETE, recordComplete);
@@ -103,7 +104,7 @@
 				clearRects();
 				this.removeEventListener(Event.ENTER_FRAME, updateMeter);
 				// mfcc feature
-				extractFeature();
+				_mfcc.extract(_recorder.output);
 				// playback
 				var wavSound:WavSound =  new WavSound(_recorder.output);
 				wavSound.play();
@@ -123,9 +124,7 @@
 					stopBtn.enabled = false;
 				}
 			}
-			private function extractFeature():void {
-				var mfcc:MFCC = new MFCC(_recorder.output);
-			}
+
 		]]>
 	</fx:Script>
 	<s:Label id="titleLabel"
