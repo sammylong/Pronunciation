@@ -3,9 +3,9 @@ package mfcc.filterbank {
 	
 	public class Filterbank {
 		private var _filters:Vector.<Filter>;	
+		private var _numChans:int;
 		
   		public function Filterbank(cStrs:Array) {
-			trace("input c: " + cStrs);
 			// get cutoff values from the input
 			var cutoffs:Array = new Array();
 			for each (var str:String in cStrs) {
@@ -15,17 +15,19 @@ package mfcc.filterbank {
 				var orderOfMag:Number = Number(str.substring(index + 2, str.length));
 				cutoffs.push(number * Math.pow(10, orderOfMag));
 			}
-			trace("processed c: " + cutoffs);
-			var numCeps:uint = cutoffs.length - 2;
+			_numChans = cutoffs.length - 2;
   			// init _filter
-  			_filters = new Vector.<Filter> (numCeps);
-			for (var i:uint=0; i<numCeps; i++) {
+  			_filters = new Vector.<Filter> (_numChans);
+			for (var i:uint=0; i<_numChans; i++) {
 				var start:Number = cutoffs[i];
 				var end:Number = cutoffs[i+2];
 				_filters[i] = new Filter (start, end, 1.0);
 			}
-			trace("filters length: ", _filters.length);
   		}
+		
+		public function get numChans() : int {
+			return _numChans;
+		}
 
   		public function melspec (samples:Vector.<Number>, spacing:Number) : Vector.<Number> {
   			var vec:Vector.<Number> = new Vector.<Number> (_filters.length); 
