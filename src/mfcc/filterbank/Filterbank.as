@@ -21,7 +21,7 @@ package mfcc.filterbank {
 			for (var i:uint=0; i<_numChans; i++) {
 				var start:Number = cutoffs[i];
 				var end:Number = cutoffs[i+2];
-				_filters[i] = new Filter (start, end, 1.0);
+				_filters[i] = new Filter (start, end, 2.0/(end - start));
 			}
   		}
 		

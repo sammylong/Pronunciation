@@ -41,6 +41,15 @@
 				_recorder.addEventListener(RecordingEvent.RECORDING, recording);
 				_recorder.addEventListener(Event.COMPLETE, recordComplete);
 				stopBtn.enabled = false;
+				
+				//load in existing file
+				var urlLoader:URLLoader = new URLLoader();
+				urlLoader.dataFormat = 'binary';
+				urlLoader.load(new URLRequest('azure.wav'));
+				urlLoader.addEventListener(Event.COMPLETE, loadTemplateWav);
+			}
+			private function loadTemplateWav(e:Event):void {
+				_mfcc.extract(e.target.data as ByteArray);
 			}
 			private function initRects():void {
 				for (var i:int=0; i<kRectCount; i++) {
