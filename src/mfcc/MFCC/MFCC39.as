@@ -43,7 +43,10 @@ package mfcc.MFCC {
 			trace("recording bytes " + bytesTotal);
 			var audioSamples:AudioSamples = new Wav().decode(wavData);
 			var samples:Vector.<Number> = audioSamples.left; 
+			// debug
+			debugLog(samples , 0, 20);
 			preEmphasis(samples);
+
 			// get each frame and perform a series of tasks
 			
 			// prepare the vectors
@@ -59,18 +62,22 @@ package mfcc.MFCC {
 				for (j=0; j<N; j++) {
 					xRe[j] *= _hamming[j];  
 				}				
+				trace("xRe: " + xRe);
 				// FFT object
 				var fft:FFT2 = new FFT2();
 				var logN:Number = Math.log(N)*Math.LOG2E
 				fft.init(logN);
 				fft.run(xRe, xIm);
+				
+				trace("fft xRe: " + xRe + "xIm: ", xIm);
+
 				// get mag of each c number
 				var xMag:Vector.<Number> = new Vector.<Number>(N/2);
 				for(j=0; j<N/2; j++) {
 					var c:ComplexNumber = new ComplexNumber(xRe[j], xIm[j]);
 					xMag[j] = c.magnitude;
 				}
-				trace("xMag length: ", xMag.length);
+				trace("xMag: ", xMag);
 				var m:Vector.<Number> = _filterbank.melspec(xMag, SAMPLERATE/N);
 				trace("after applied filterbank " + m);
 				// what's the next step

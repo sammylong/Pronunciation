@@ -22,9 +22,9 @@ package mfcc.filterbank {
 			for (var i:uint=0; i<numCeps; i++) {
 				var start:Number = cutoffs[i];
 				var end:Number = cutoffs[i+2];
-				_filters[i] = new Filter (start, end, 2.0);
+				_filters[i] = new Filter (start, end, 1.0);
 			}
-			trace("filters: ", _filters);
+			trace("filters length: ", _filters.length);
   		}
 
   		public function melspec (samples:Vector.<Number>, spacing:Number) : Vector.<Number> {
