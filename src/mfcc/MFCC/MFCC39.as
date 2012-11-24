@@ -52,45 +52,52 @@ package mfcc.MFCC {
 			// get each frame and perform a series of tasks
 			trace("samples length: ", samples.length);
 
-			var numFrames:uint = Math.floor(((samples.length as Number) - N)/SHIFT) as uint;
-			trace("num frames: ", numFrames);
-			
+			var numFrames:int = Math.floor(((samples.length as Number) - N)/SHIFT) as int;
+			trace("init num frames: ", numFrames);
+			// find start frame
+			var magnitudes:Number = 0.0;
+			var frame:int = 0
+			for (frame=0; frame< numFrames; frame++) {
+				magnitudes = 0.0;
+				for (var i:uint=frame*SHIFT; i<frame*SHIFT+N; i++) {
+					magnitudes += Math.abs(samples[i]);
+				}
+				if (magnitudes >0) break;
+			}
+			var startFrame:uint = frame;
+			// find end frame
+			for (frame=numFrames - 1; frame>=0; frame --) {
+				magnitudes = 0.0;
+				for (i=frame*SHIFT; i<frame*SHIFT+N; i++) {
+					magnitudes += Math.abs(samples[i]);
+				}
+				if (magnitudes >0) break;
+			}
+			var endFrame:uint = frame;
+			numFrames = endFrame - startFrame + 1;
+			trace("clipped num frames: ", numFrames);
+
 			// prepare the vectors
 			var xRe:Vector.<Number> = new Vector.<Number>(N);
 			var xIm:Vector.<Number> = new Vector.<Number>(N);
 			
-			
-			// make a test
-			for (var x:int=0; x<16; x++) {
-				xRe[x] = x + 1;
-				xIm[x] = 0.0;
-			}
-			var fftTest:FFT2 = new FFT2();
-			fftTest.init(4);
-			fftTest.run(xRe, xIm);
-			trace("test xRe ", xRe);
-			trace("test xIm ", xIm);
-			
-			// container for average value
-			var avgCoefs:Vector.<Number> = new Vector.<Number>(NUMCEPS);
-			// zero it all
-			for each (var num:Number in avgCoefs) {
-				num = 0.0;
-			}
+			trace("starting frame " + startFrame + "end frame " + endFrame);
+
+			startFrame = 200;
 
 			var features:Vector.<Vector.<Number>> = new Vector.<Vector.<Number>>();
-			for (var i:uint=0; i<numFrames; i++) { // only x frames for now
-				// result container
-				var cc:Vector.<Number> = new Vector.<Number>(NUMCEPS);
+			for (i=startFrame; i<=endFrame ; i++) { // only x frames for now
 
-				var magnitudes:Number = 0.0;
+				magnitudes = 0;
 				// coyp the ones in the window				
 				for (var j:int=0; j<N; j++) {
 					xRe[j] = samples[SHIFT*i + j];
 					xIm[j] = 0.0;
 					magnitudes += xRe[j];
 				}
-				if (magnitudes == 0) continue;
+				if (magnitudes == 0) {
+					continue;
+				}
 				// hamming
 				for (j=0; j<N; j++) {
 					xRe[j] *= _hamming[j];  
@@ -101,7 +108,6 @@ package mfcc.MFCC {
 				fft.init(logN);
 				fft.run(xRe, xIm);
 
-				
 				// get mag of each c number
 				var xMag:Vector.<Number> = new Vector.<Number>(N/2);
 				for(j=0; j<N/2; j++) {
@@ -113,31 +119,36 @@ package mfcc.MFCC {
 				for (j=0; j<NUMCEPS; j++) {
 					m[j] = Math.log(m[j]);
 				}
-				trace(i + " m " + m);
+				trace(i + " mm " + m);
 
-				// dct
-				var numChans:Number = _filterbank.numChans as Number; 
-				for (j=0; j<NUMCEPS; j++) {
-					var sum:Number = 0.0;
-					for (var k:int=0; k<numChans; k++) {
-						var factor:Number = Math.cos((Math.PI*j/numChans)*(k-0.5));
-						sum+= m[k]*factor;
-					}
-					cc[j] = Math.sqrt(2.0/numChans)*sum;
-				}
-				trace(i + " c " + cc);
+				// cepstral coefs container
+				var cc:Vector.<Number> = new Vector.<Number>(NUMCEPS);
+				computeCepstralCoef(m, cc);
+				trace(i + " cc " + cc);
+
 				// ceptstral lifter
-				for (j=0; j<NUMCEPS; j++) {
-					cc[j] *= 1 + 0.5*CEPLIFTER*Math.sin(Math.PI*j/CEPLIFTER);
-					if (!isNaN(cc[j])) {
-						avgCoefs[j] += cc[j]/numFrames;
-					}
-				}
-				features[i] = cc;
+				cepstralLifter(cc);
+				trace(i + " ll " + cc);
+				
+				features.push(cc);
 			}
-			
-			// subtract average
+			// container for average value
+			var avgCoefs:Vector.<Number> = new Vector.<Number>(NUMCEPS);
+			// zero it all
+			for each (var num:Number in avgCoefs) {
+				num = 0.0;
+			}
+
+
+			// compute average
 			for each (var f:Vector.<Number> in features) {
+				for (var k:uint=0; k<f.length; k++) {
+					avgCoefs[k]+=f[k]/features.length;// could be precision problem
+				}
+			}
+
+			// subtract average
+			for each (f in features) {
 				for (k=0; k<f.length; k++) {
 					f[k] -= avgCoefs[k];
 				}
@@ -147,21 +158,33 @@ package mfcc.MFCC {
 				trace(j + ": " + features[j]);
 			}
 		}
-		
 		private function preEmphasis(samples:Vector.<Number>):void {
 			for (var i:int=samples.length - 1; i>0; i--) {
 				samples[i] = samples[i] - PREEMCOEF*samples[i-1];
 			}
 		}
-		
-// Helpers		
 		private function populateHammingWindow(hamming:Vector.<Number>):void {
 			for(var i:int=0; i<N; i++) {
 				// same as iOS library
 				hamming[i] = 0.54 - 0.46 * Math.cos(2.0*Math.PI*i/N);
 			}
 		}
-
+		private function computeCepstralCoef(m:Vector.<Number>, cc:Vector.<Number>):void {
+			var numChans:Number = m.length as Number; 
+			for (var j:uint=0; j<NUMCEPS; j++) {
+				var sum:Number = 0.0;
+				for (var k:int=0; k<numChans; k++) {
+					var factor:Number = Math.cos((Math.PI*(j+1)/numChans)*((k+1)-0.5));
+					sum+= m[k]*factor;
+				}
+				cc[j] = Math.sqrt(2.0/numChans)*sum;
+			}
+		}
+		private function cepstralLifter(cc:Vector.<Number>):void {
+			for (var j:uint=0; j<NUMCEPS; j++) {
+				cc[j] *= 1 + 0.5*CEPLIFTER*Math.sin(Math.PI*(j+1)/CEPLIFTER);
+			}
+		}
 		private function debugLog(samples:Vector.<Number>, fromIndex:uint, length:uint):void {
 			for(var i:uint= fromIndex; i< fromIndex+ length; i++) {
 				trace(samples[i]);
