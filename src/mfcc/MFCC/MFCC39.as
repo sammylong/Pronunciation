@@ -110,7 +110,7 @@ package mfcc.MFCC {
 				}
 				var m:Vector.<Number> = _filterbank.melspec(xMag, SAMPLERATE/N);
 				// log
-				for (j=0; j<NUMCEPS; j++) {
+				for (j=0; j<m.length; j++) {
 					m[j] = Math.max(m[j], 1.0);// otherwise the value goes crazy
 					m[j] = Math.log(m[j]);
 				}
