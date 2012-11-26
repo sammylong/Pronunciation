@@ -19,6 +19,7 @@ package mfcc.MFCC {
 		private static const SAMPLERATE:Number = 8000;//8000;
 		private static const N:int = 256;// samples per window
 		private static const SHIFT:int = 80; // samples per shift
+		private static const NUMCHANS:uint = 26;
 		private static const NUMCEPS:int = 12;
 		private static const CEPLIFTER:int = 22;
 		
@@ -29,16 +30,7 @@ package mfcc.MFCC {
 			// pre-render the hamming window
 			_hamming =   new Vector.<Number>(N); 
 			populateHammingWindow(_hamming);
-	
-			// prepare filterbank
-			var urlLoader:URLLoader = new URLLoader();
-			urlLoader.load(new URLRequest('asciiC.txt'));
-			urlLoader.addEventListener(Event.COMPLETE, loadFilterbank);
-		}
-		
-		private function loadFilterbank(e:Event):void {
-			var cArray:Array = e.target.data.split(/ /);
-			_filterbank = new Filterbank(cArray);
+			_filterbank = new Filterbank(NUMCHANS, SAMPLERATE, N);
 		}
 
 		public function extract(wavData:ByteArray):void {
@@ -108,9 +100,9 @@ package mfcc.MFCC {
 					var c:ComplexNumber = new ComplexNumber(xRe[j], xIm[j]);
 					xMag[j] = c.magnitude;
 				}
-				var m:Vector.<Number> = _filterbank.melspec(xMag, SAMPLERATE/N);
+				var m:Vector.<Number> = _filterbank.melspec(xMag);
 				// log
-				for (j=0; j<NUMCEPS; j++) {
+				for (j=0; j<m.length; j++) {
 					m[j] = Math.max(m[j], 1.0);// otherwise the value goes crazy
 					m[j] = Math.log(m[j]);
 				}
@@ -123,7 +115,7 @@ package mfcc.MFCC {
 
 				// ceptstral lifter
 				cepstralLifter(cc);
-				trace(i + " cc " + cc);
+				//trace(i + " cc " + cc);
 				
 				features.push(cc);
 			}
@@ -169,12 +161,11 @@ package mfcc.MFCC {
 		private function computeCepstralCoef(m:Vector.<Number>, cc:Vector.<Number>):void {
 			var numChans:Number = m.length as Number; 
 			for (var j:uint=0; j<NUMCEPS; j++) {
-				var sum:Number = 0.0;
+				cc[j] = 0.0;
 				for (var k:int=0; k<numChans; k++) {
 					var factor:Number = Math.cos((Math.PI*(j+1)/numChans)*((k+1)-0.5));
-					sum+= m[k]*factor;
+					cc[j]+= Math.sqrt(2.0/numChans)*m[k]*factor;
 				}
-				cc[j] = Math.sqrt(2.0/numChans)*sum;
 			}
 		}
 		private function cepstralLifter(cc:Vector.<Number>):void {
