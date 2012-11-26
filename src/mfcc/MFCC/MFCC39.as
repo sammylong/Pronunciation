@@ -16,7 +16,7 @@ package mfcc.MFCC {
 	public class MFCC39 {
 	
 		private static const PREEMCOEF:Number = 0.97;
-		private static const SAMPLERATE:Number = 8000;
+		private static const SAMPLERATE:Number = 8000;//8000;
 		private static const N:int = 256;// samples per window
 		private static const SHIFT:int = 80; // samples per shift
 		private static const NUMCEPS:int = 12;
@@ -54,6 +54,7 @@ package mfcc.MFCC {
 
 			var numFrames:int = Math.floor(((samples.length as Number) - N)/SHIFT) as int;
 			trace("init num frames: ", numFrames);
+/*
 			// find start frame
 			var magnitudes:Number = 0.0;
 			var frame:int = 0
@@ -76,28 +77,21 @@ package mfcc.MFCC {
 			var endFrame:uint = frame;
 			numFrames = endFrame - startFrame + 1;
 			trace("clipped num frames: ", numFrames);
-
+*/
+			var startFrame:uint = 0;
+			var endFrame:uint = numFrames - 1;
 			// prepare the vectors
 			var xRe:Vector.<Number> = new Vector.<Number>(N);
 			var xIm:Vector.<Number> = new Vector.<Number>(N);
 			
-			trace("starting frame " + startFrame + "end frame " + endFrame);
-
-			startFrame = 200;
-
 			var features:Vector.<Vector.<Number>> = new Vector.<Vector.<Number>>();
-			for (i=startFrame; i<=endFrame ; i++) { // only x frames for now
-
-				magnitudes = 0;
+			for (var i:uint=startFrame; i<=endFrame ; i++) { // only x frames for now
 				// coyp the ones in the window				
 				for (var j:int=0; j<N; j++) {
 					xRe[j] = samples[SHIFT*i + j];
 					xIm[j] = 0.0;
-					magnitudes += xRe[j];
 				}
-				if (magnitudes == 0) {
-					continue;
-				}
+
 				// hamming
 				for (j=0; j<N; j++) {
 					xRe[j] *= _hamming[j];  
@@ -117,18 +111,19 @@ package mfcc.MFCC {
 				var m:Vector.<Number> = _filterbank.melspec(xMag, SAMPLERATE/N);
 				// log
 				for (j=0; j<NUMCEPS; j++) {
+					m[j] = Math.max(m[j], 1.0);// otherwise the value goes crazy
 					m[j] = Math.log(m[j]);
 				}
-				trace(i + " mm " + m);
+				//trace(i + " mm " + m);
 
 				// cepstral coefs container
 				var cc:Vector.<Number> = new Vector.<Number>(NUMCEPS);
 				computeCepstralCoef(m, cc);
-				trace(i + " cc " + cc);
+				//trace(i + " cc " + cc);
 
 				// ceptstral lifter
 				cepstralLifter(cc);
-				trace(i + " ll " + cc);
+				trace(i + " cc " + cc);
 				
 				features.push(cc);
 			}
@@ -147,6 +142,7 @@ package mfcc.MFCC {
 				}
 			}
 
+			trace("average: " + avgCoefs);
 			// subtract average
 			for each (f in features) {
 				for (k=0; k<f.length; k++) {
@@ -162,11 +158,12 @@ package mfcc.MFCC {
 			for (var i:int=samples.length - 1; i>0; i--) {
 				samples[i] = samples[i] - PREEMCOEF*samples[i-1];
 			}
+			samples[0] *= (1.0 - PREEMCOEF);
 		}
 		private function populateHammingWindow(hamming:Vector.<Number>):void {
 			for(var i:int=0; i<N; i++) {
 				// same as iOS library
-				hamming[i] = 0.54 - 0.46 * Math.cos(2.0*Math.PI*i/N);
+				hamming[i] = 0.54 - 0.46 * Math.cos(2.0*Math.PI*i/(N-1.0));
 			}
 		}
 		private function computeCepstralCoef(m:Vector.<Number>, cc:Vector.<Number>):void {

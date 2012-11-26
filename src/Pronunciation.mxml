@@ -45,7 +45,7 @@
 				//load in existing file
 				var urlLoader:URLLoader = new URLLoader();
 				urlLoader.dataFormat = 'binary';
-				urlLoader.load(new URLRequest('azure.wav'));
+				urlLoader.load(new URLRequest('samples/activate_2.wav'));
 				urlLoader.addEventListener(Event.COMPLETE, loadTemplateWav);
 			}
 			private function loadTemplateWav(e:Event):void {
