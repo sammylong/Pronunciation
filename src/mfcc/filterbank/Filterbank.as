@@ -17,15 +17,16 @@ package mfcc.filterbank {
 			var maxChan:uint = numChans + 1;
 			_freqStep = sampleRate/N;//freq step
 			var mlo:Number = 0; 
-			var mhi:Number = mel(Nby2 + 1,_freqStep);
+			var mhi:Number = mel(Nby2,_freqStep);
 			// compute center freq for each tri
 			_centerFreqs = new Vector.<Number>(numChans + 2);
 			for (var chan:uint=0; chan <= maxChan; chan++) {
 				_centerFreqs[chan] = ((chan as Number)/maxChan)*(mhi - mlo) + mlo;
+				//trace("cf " + chan + " : " +   _centerFreqs[chan]);
 			}
 			// assign channel to each signal
 			_lowChans = new Vector.<int>(Nby2);
-			chan = 0;
+			chan = 1;
 			var klo:uint = 1;
 			for (var k:uint=0; k<Nby2; k++) {
 				var melk:Number = mel(k,_freqStep);
@@ -35,6 +36,8 @@ package mfcc.filterbank {
 					while(_centerFreqs[chan] < melk && chan <= maxChan) ++chan;
 					_lowChans[k] = chan - 1;
 				}
+				//trace("loChan " + k + " : " + _lowChans[k]);
+
 			}
 			// lower channel weight
 			_lowChanWeights = new Vector.<Number>(Nby2);
@@ -45,7 +48,9 @@ package mfcc.filterbank {
 				} else {
 					_lowChanWeights[k] = (_centerFreqs[chan+1] - mel(k, _freqStep))/(_centerFreqs[chan+1] - _centerFreqs[chan]);
 				}
+				//trace("loWt " + k + " : " + _lowChanWeights[k]);
 			}
+
   		}
 		public function get numChans() : int {
 			return _numChans;
@@ -62,6 +67,11 @@ package mfcc.filterbank {
 				if (chan>0 && chan< _numChans) {
 					m[chan]+= (1-_lowChanWeights[k])*samples[k];
 				}
+			}
+			// take logs
+			for (chan=0; chan<_numChans; chan++) {
+				//m[chan] = Math.max(m[chan], 1.0);
+				m[chan] = Math.log(m[chan]);
 			}
 			return m;
   		}

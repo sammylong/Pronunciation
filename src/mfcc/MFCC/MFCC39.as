@@ -38,8 +38,6 @@ package mfcc.MFCC {
 			trace("recording bytes " + bytesTotal);
 			var audioSamples:AudioSamples = new Wav().decode(wavData);
 			var samples:Vector.<Number> = audioSamples.left; 
-			// debug
-			preEmphasis(samples);
 
 			// get each frame and perform a series of tasks
 			trace("samples length: ", samples.length);
@@ -70,55 +68,74 @@ package mfcc.MFCC {
 			numFrames = endFrame - startFrame + 1;
 			trace("clipped num frames: ", numFrames);
 */
-			var startFrame:uint = 0;
-			var endFrame:uint = numFrames - 1;
+
 			// prepare the vectors
 			var xRe:Vector.<Number> = new Vector.<Number>(N);
 			var xIm:Vector.<Number> = new Vector.<Number>(N);
+/*
+			// fft test
+			for (var j:int=0; j<N; j++) {
+				xRe[j] = j+1;
+				xIm[j] = 0.0;
+			}
+			var fftTest:FFT2 = new FFT2();
+			fftTest.init(8);
+			fftTest.run(xRe, xIm);
+			
+			for (j=0; j<N/2; j++) {
+				trace("j: " + j + " Re: " + xRe[j] + " Im: " + xIm[j]);
+			}	
+*/
 			
 			var features:Vector.<Vector.<Number>> = new Vector.<Vector.<Number>>();
-			for (var i:uint=startFrame; i<=endFrame ; i++) { // only x frames for now
+			for (var i:uint=0; i< numFrames; i++) { // only x frames for now
 				// coyp the ones in the window				
 				for (var j:int=0; j<N; j++) {
 					xRe[j] = samples[SHIFT*i + j];
 					xIm[j] = 0.0;
 				}
+				//preEmphasis
+				preEmphasis(xRe);
 
 				// hamming
 				for (j=0; j<N; j++) {
 					xRe[j] *= _hamming[j];  
-				}				
+				}			
+
 				// FFT object
 				var fft:FFT2 = new FFT2();
-				var logN:Number = Math.log(N)*Math.LOG2E
+				var logN:Number = Math.log(N)*Math.LOG2E;
 				fft.init(logN);
 				fft.run(xRe, xIm);
-
+/*	
+				for (j=0; j<N/2; j++) {
+					trace(j + ": Re: " + xRe[j] + " Im: " + xIm[j]);
+				}
+*/
 				// get mag of each c number
 				var xMag:Vector.<Number> = new Vector.<Number>(N/2);
 				for(j=0; j<N/2; j++) {
-					var c:ComplexNumber = new ComplexNumber(xRe[j], xIm[j]);
-					xMag[j] = c.magnitude;
+					xMag[j] = Math.sqrt(Math.pow(xRe[j], 2) + Math.pow(xIm[j], 2));
+					//trace(j + ": " + xMag[j]);
 				}
 				var m:Vector.<Number> = _filterbank.melspec(xMag);
-				// log
-				for (j=0; j<m.length; j++) {
-					m[j] = Math.max(m[j], 1.0);// otherwise the value goes crazy
-					m[j] = Math.log(m[j]);
-				}
 				//trace(i + " mm " + m);
 
 				// cepstral coefs container
 				var cc:Vector.<Number> = new Vector.<Number>(NUMCEPS);
 				computeCepstralCoef(m, cc);
-				//trace(i + " cc " + cc);
-
 				// ceptstral lifter
 				cepstralLifter(cc);
-				//trace(i + " cc " + cc);
-				
+				trace(i + " : " + cc);
+
+/*
+				for (j=0; j<NUMCEPS; j++) {
+					trace(i + " , " + j + " : " + cc[j] );
+				}
+*/
 				features.push(cc);
 			}
+/*
 			// container for average value
 			var avgCoefs:Vector.<Number> = new Vector.<Number>(NUMCEPS);
 			// zero it all
@@ -141,21 +158,26 @@ package mfcc.MFCC {
 					f[k] -= avgCoefs[k];
 				}
 			}
+*/
+			
+/*
 			// print
 			for (j=0; j<20;j++) {
 				trace(j + ": " + features[j]);
 			}
+*/
+
 		}
 		private function preEmphasis(samples:Vector.<Number>):void {
 			for (var i:int=samples.length - 1; i>0; i--) {
-				samples[i] = samples[i] - PREEMCOEF*samples[i-1];
+				samples[i] -= PREEMCOEF*samples[i-1];
 			}
 			samples[0] *= (1.0 - PREEMCOEF);
 		}
 		private function populateHammingWindow(hamming:Vector.<Number>):void {
 			for(var i:int=0; i<N; i++) {
 				// same as iOS library
-				hamming[i] = 0.54 - 0.46 * Math.cos(2.0*Math.PI*i/(N-1.0));
+				hamming[i] = 0.54 - 0.46 * Math.cos(2.0*Math.PI*i/(N-1));
 			}
 		}
 		private function computeCepstralCoef(m:Vector.<Number>, cc:Vector.<Number>):void {

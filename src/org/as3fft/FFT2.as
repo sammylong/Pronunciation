@@ -91,7 +91,7 @@ package org.as3fft {
 			// If it's an IFFT, we divide by N while we're at it
 			var x:FFTElement = m_X[0];
 			var k:uint = 0;
-			var scale:Number = inverse ? m_invN : 1.0;
+			var scale:Number = inverse ? m_invN : 2.0;
 			while (x)
 			{
 				x.re = scale*xRe[k];
